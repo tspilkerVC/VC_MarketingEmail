@@ -1,0 +1,29 @@
+/*
+Standard top cat dynamic target. Uses top category but could set any value as a column "Dynamic". The values set in the "Dynamic" column field are used in the mailing's content block to create the email content
+*/
+
+
+SELECT vwSvdsEmails.Email_EmailAddress
+      ,vwSvdsEmails.Email_CustomerId AS CustomerID
+      ,vwSvdsEmails.Email_EmailId
+      ,vwSvdsEmails.Email_Domain
+      ,vwSvdsEmails.Email_GuiID
+      ,vwSvdsEmails.Email_FirstName
+      ,vwSvdsEmails.__sm_audience_id
+      ,vwSvdsCustomerTop3Products.CTP_Product1CategoryName
+      ,vwSvdsCustomerTop3Products.CTP_Product2CategoryName
+      ,vwSvdsCustomerTop3Products.CTP_Product3CategoryName
+       ,(CASE 
+           WHEN vwSvdsCustomerTop3Products.CTP_Product1CategoryName IN 
+           ('Vitamins and Supplements','Beauty and Personal Care','Food and Beverages','Sports and Fitness','Herbs and Botanicals','Natural Home','Babies and Kids') 
+      THEN vwSvdsCustomerTop3Products.CTP_Product1CategoryName
+           WHEN vwSvdsCustomerTop3Products.CTP_Product1CategoryName = 'Diet Products' THEN 'Sports and Fitness'          
+           ELSE 'Food and Beverages'
+         END) as Dynamic
+FROM ds_internal_161536 vwSvdsEmails
+JOIN ds_extension_161620 vwSvdsIndividualMergedCustomers ON (vwSvdsEmails.email_emailid = vwSvdsIndividualMergedCustomers.imc_emailid)
+JOIN ds_extension_161656 vwSvdsCustomerTop3Products ON (vwSvdsIndividualMergedCustomers.imc_MasterID = vwSvdsCustomerTop3Products.CTP_Masterid)
+WHERE vwSvdsEmails.Email_isValid = 1
+AND vwSvdsEmails.Email_isUnsubscribed = 0
+AND vwSvdsEmails.Email_isMarketingEmailSignup = 1
+AND vwSvdsIndividualMergedCustomers.IMC_LastOrderDate >= CURRENT_DATE - INTERVAL '274 day'
